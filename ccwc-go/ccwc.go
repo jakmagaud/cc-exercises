@@ -12,7 +12,7 @@ func check(err error) {
 	}
 }
 
-func byteCount(filename string) int {
+func byteCount(filename string) int64 {
 	file, err := os.Open(filename)
 	check(err)
 	defer file.Close()
@@ -20,11 +20,11 @@ func byteCount(filename string) int {
 	stat, err := file.Stat()
 	check(err)
 	size := stat.Size()
+	return size
 
 }
 
 func main() {
-	fmt.Println("test")
 	counterFlag := flag.Bool("c", false, "count the number of characters")
 	wordFlag := flag.Bool("w", false, "count the number of words")
 	lineFlag := flag.Bool("l", false, "count the number of lines")
@@ -41,7 +41,8 @@ func main() {
 	filename := tail[0]
 
 	if *counterFlag {
-		byteCount(filename)
+		result := byteCount(filename)
+		fmt.Printf("%d %s", result, filename)
 	}
 
 }
