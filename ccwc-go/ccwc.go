@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -24,6 +25,18 @@ func byteCount(filename string) int64 {
 
 }
 
+func lineCount(filename string) int {
+	file, err := os.Open(filename)
+	check(err)
+	defer file.Close()
+	linecounter := 0
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		linecounter++
+	}
+	return linecounter
+}
+
 func main() {
 	counterFlag := flag.Bool("c", false, "count the number of characters")
 	wordFlag := flag.Bool("w", false, "count the number of words")
@@ -42,6 +55,11 @@ func main() {
 
 	if *counterFlag {
 		result := byteCount(filename)
+		fmt.Printf("%d %s", result, filename)
+	}
+
+	if *lineFlag {
+		result := lineCount(filename)
 		fmt.Printf("%d %s", result, filename)
 	}
 
