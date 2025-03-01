@@ -1,10 +1,12 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"unicode/utf8"
 )
 
 func check(err error) {
@@ -13,41 +15,20 @@ func check(err error) {
 	}
 }
 
-func byteCount(filename string) int64 {
-	file, err := os.Open(filename)
-	check(err)
-	defer file.Close()
-	// get the file size
-	stat, err := file.Stat()
-	check(err)
-	size := stat.Size()
-	return size
-
+func byteCount(data []byte) int {
+	return len(data)
 }
 
-func lineCount(filename string) int {
-	file, err := os.Open(filename)
-	check(err)
-	defer file.Close()
-	linecounter := 0
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		linecounter++
-	}
-	return linecounter
+func lineCount(data []byte) int {
+	return bytes.Count(data, []byte("\n"))
 }
 
-func wordCount(filename string) int {
-	file, err := os.Open(filename)
-	check(err)
-	defer file.Close()
-	wordcounter := 0
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		wordcounter++
-	}
-	return wordcounter
+func wordCount(data []byte) int {
+	return len(bytes.Fields(data))
+}
+
+func multiByteCount(data []byte) int {
+	return utf8.RuneCountInString(string(data))
 }
 
 func main() {
@@ -58,26 +39,36 @@ func main() {
 
 	flag.Parse()
 	tail := flag.Args()
+
+	var data []byte = nil
+	var err error = nil
+	filename := ""
+
 	if len(tail) == 0 {
-		fmt.Println("Please specify a file")
-		return
+		// reading from stdin
+		data, err = io.ReadAll((os.Stdin))
+		check(err)
+	} else {
+		// reading from file
+		filename = tail[0]
+		data, err = os.ReadFile(filename)
+		check(err)
 	}
-	filename := tail[0]
 
 	if *counterFlag {
-		result := byteCount(filename)
+		result := byteCount(data)
 		fmt.Printf("%d %s", result, filename)
 	} else if *lineFlag {
-		result := lineCount(filename)
+		result := lineCount(data)
 		fmt.Printf("%d %s", result, filename)
 	} else if *wordFlag {
-		result := wordCount(filename)
+		result := wordCount(data)
 		fmt.Printf("%d %s", result, filename)
 	} else if *multiByteFlag {
-		result := byteCount(filename)
+		result := multiByteCount(data)
 		fmt.Printf("%d %s", result, filename)
 	} else {
-		fmt.Printf("%d %d %d %s\n", lineCount(filename), wordCount(filename), byteCount(filename), filename)
+		fmt.Printf("%d %d %d %s\n", lineCount(data), wordCount(data), byteCount(data), filename)
 	}
 
 }
